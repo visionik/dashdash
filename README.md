@@ -1,8 +1,8 @@
 # CLI AI Help Specification
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Status:** Draft  
-**Last Updated:** 2025-12-30
+**Last Updated:** 2026-01-02
 
 ## 1. Introduction
 
@@ -24,6 +24,8 @@ Traditional `--help` output is optimized for human readability with formatting, 
 - **Output format recommendations** - Which format is best for programmatic parsing
 - **Troubleshooting guides** - Structured error diagnosis
 - **Exhaustive option enumeration** - All valid combinations, not just common ones
+- **Safety guardrails** - Which actions require human confirmation
+- **Common command patterns** - The 80/20 of daily usage, not just the full reference
 
 ### 2.2 Benefits
 
@@ -116,22 +118,26 @@ The output MUST be in markdown format with:
 The help content MUST include:
 
 1. **Overview** - Brief tool description and capabilities
-2. **Setup/Prerequisites** - Authentication, installation, configuration
-3. **Command Reference** - Complete list of commands/subcommands
-4. **Input Specification** - Detailed parameter/argument formats
-5. **Output Formats** - Available formats and recommendations
-6. **Examples** - Common use cases with actual commands
+2. **Setup/Prerequisites** - Authentication, installation, configuration (env vars, config files, OAuth flows)
+3. **Common Commands** - The 5-10 commands an AI agent will use 80% of the time, with copy-paste examples
+4. **Command Reference** - Complete list of commands/subcommands
+5. **Input Specification** - Detailed parameter/argument formats
+6. **Output Formats** - Available formats and recommendations
+7. **Examples** - Common use cases with actual commands
 
 #### 3.4.3 Recommended Sections
 
 The help content SHOULD include:
 
-1. **Troubleshooting Guide** - Common errors with solutions
-2. **Negative Examples** - Explicit "do NOT do this" guidance
-3. **Format Conversion Guide** - How to transform common query patterns
-4. **Best Practices** - LLM-specific recommendations (e.g., "Always use --json")
-5. **Quick Reference Card** - Table of common operations
-6. **Error Handling** - Expected failure modes
+1. **Quick Start** - Minimal viable example to verify the tool works (e.g., "Run `tool status` to confirm auth is working")
+2. **Gotchas** - Non-obvious behaviors, footguns, things that surprise users (and AIs)
+3. **Troubleshooting Guide** - Common errors with solutions
+4. **Negative Examples** - Explicit "do NOT do this" guidance
+5. **Format Conversion Guide** - How to transform common query patterns
+6. **Best Practices** - LLM-specific recommendations (e.g., "Always use --json")
+7. **Quick Reference Card** - Table of common operations
+8. **Error Handling** - Expected failure modes
+9. **Confirmation Requirements** - Actions that REQUIRE user confirmation before executing (e.g., sending emails, deleting data, making purchases)
 
 #### 3.4.4 Date/Time Handling
 
@@ -208,6 +214,49 @@ Content SHOULD use emoji or symbols to highlight:
 - ⚠️ Important warnings
 - 💡 Tips and best practices
 - 🔧 Troubleshooting steps
+- 🛑 Actions requiring confirmation
+
+### 3.6 Safety and Confirmation Requirements
+
+#### 3.6.1 Destructive or External Actions
+
+AI agents operating autonomously need clear guidance on which actions require human confirmation. The documentation MUST explicitly list actions that:
+- Send communications (emails, messages, notifications)
+- Delete or modify data
+- Make purchases or financial transactions
+- Post publicly (social media, forums)
+- Modify system configuration
+
+#### 3.6.2 Confirmation Section Format
+
+```markdown
+## 🛑 Actions Requiring Confirmation
+
+The following commands have external effects and MUST NOT be executed
+without explicit user approval:
+
+| Command | Effect | Confirm Before |
+|---------|--------|----------------|
+| `tool send --to` | Sends email | Always |
+| `tool delete` | Permanently removes data | Always |
+| `tool post` | Publishes publicly | Always |
+| `tool buy` | Makes purchase | Always |
+
+### Safe to Execute Freely
+- `tool list` - Read-only
+- `tool search` - Read-only  
+- `tool status` - Read-only
+```
+
+#### 3.6.3 Rationale
+
+AI agents often operate with broad permissions but should exercise restraint. Explicit confirmation requirements prevent:
+- Accidental email sends while testing commands
+- Data loss from misunderstood delete operations
+- Unintended public posts
+- Financial transactions without authorization
+
+This section helps AI agents self-regulate and ask for permission appropriately.
 
 ## 4. Implementation Guidance
 
@@ -350,6 +399,7 @@ This specification is informed by:
 - Common patterns in AI agent error logs
 - User feedback on AI-generated command suggestions
 - The OuraCLI reference implementation
+- The Clawdis SKILL.md pattern for AI agent skill documentation
 
 ## Appendix A: Complete Example
 
@@ -378,8 +428,12 @@ Key features demonstrated:
 - [ ] Document all date/time formats if applicable
 - [ ] Provide output format recommendations
 - [ ] Include error examples with solutions
-- [ ] Use visual markers (✅, ❌, ⚠️, 💡)
+- [ ] Use visual markers (✅, ❌, ⚠️, 💡, 🛑)
 - [ ] Test with actual AI agent
 - [ ] Validate examples are executable
 - [ ] Review for information disclosure
 - [ ] Add version/date to content
+- [ ] Include "Common Commands" section (80/20 daily usage)
+- [ ] Document "Gotchas" (non-obvious behaviors)
+- [ ] List actions requiring confirmation (§3.6)
+- [ ] Provide quick start / smoke test command
