@@ -123,7 +123,7 @@ Defines the `__ai_help.md` file convention for websites and web applications.
 
 **Example:**
 ```
-https://example.com/__ai_help.md
+https://example.com/.well-known/__ai_help
 https://example.com/app/__ai_help.md
 https://example.com/api/__ai_help.md
 ```

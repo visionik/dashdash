@@ -6,7 +6,7 @@
 
 ## 1. Introduction
 
-This document specifies a standard approach for websites and web applications to provide AI-optimized usage guidance through a dedicated `__ai_help.md` file. As Large Language Models (LLMs) and AI agents increasingly interact with web services, specialized documentation format requirements emerge that differ from traditional human-oriented documentation.
+This document specifies a standard approach for websites and web applications to provide AI-optimized usage guidance through a dedicated `.well-known/__ai_help` file (with optional subdirectory `__ai_help.md` files). As Large Language Models (LLMs) and AI agents increasingly interact with web services, specialized documentation format requirements emerge that differ from traditional human-oriented documentation.
 
 ### 1.1 Key Words
 
@@ -40,35 +40,51 @@ Traditional web documentation (FAQs, user guides, API docs) is optimized for hum
 
 ### 3.1 File Naming and Location
 
-#### 3.1.1 Primary Filename
+#### 3.1.1 File Naming Convention
 
-Websites MUST use the filename `__ai_help.md` (double underscore prefix, underscore separator).
+**Root File:**
+Websites MUST use `.well-known/__ai_help` for the root file.
 
-**Rationale:** The naming convention:
+**Rationale:**
+- Follows RFC 8615 standard for `.well-known` URIs
+- Retains `__ai_help` naming pattern for consistency
+- No file extension (following `.well-known` convention, though content is markdown)
+- Standard, predictable location for AI agents
+
+**Subdirectory Files:**
+Websites MUST use `__ai_help.md` (double underscore prefix, `.md` extension) for subdirectory files.
+
+**Rationale:**
 - Double underscore prefix indicates meta/system file (common in many frameworks)
-- Single underscore separator maintains consistency with Python conventions
-- `.md` extension ensures readable plain text
-- Parallel to `robots.txt`, `sitemap.xml` as web meta-documents
+- `.md` extension ensures readable plain text when viewed directly
+- `.well-known` is typically root-only, so subdirectories use the full filename pattern
 
 #### 3.1.2 Root Location
 
-Sites MUST implement `__ai_help.md` at the root directory:
+Sites MUST implement the root file at `.well-known/__ai_help` (following RFC 8615):
 ```
-https://example.com/__ai_help.md
+https://example.com/.well-known/__ai_help
 ```
+
+**Note:** No file extension for the root file to follow `.well-known` URI conventions, though content is markdown.
 
 #### 3.1.3 Hierarchical Structure
 
 Sites MAY implement additional `__ai_help.md` files in subdirectories for complex applications:
 ```
-https://example.com/__ai_help.md           # Root - general site info
-https://example.com/app/__ai_help.md        # Application-specific
-https://example.com/app/dashboard/__ai_help.md
-https://example.com/app/inventory/__ai_help.md
-https://example.com/api/__ai_help.md        # API-specific guidance
+https://example.com/.well-known/__ai_help      # Root - general site info (RFC 8615)
+https://example.com/app/__ai_help.md           # Application-specific
+https://example.com/app/dashboard/__ai_help.md # Dashboard-specific
+https://example.com/app/inventory/__ai_help.md # Inventory-specific
+https://example.com/api/__ai_help.md           # API-specific guidance
 ```
 
-When hierarchical files exist, the root `__ai_help.md` MUST indicate this with front matter (see §3.2).
+**Rationale for hybrid approach:**
+- Root file uses `.well-known/__ai_help` for RFC 8615 compliance and standardization
+- Subdirectory files use `__ai_help.md` pattern since `.well-known` is typically root-only
+- The `__` prefix is consistent across all files for recognizability
+
+When hierarchical files exist, the root file MUST indicate this with `sub: true` in front matter (see §3.2).
 
 ### 3.2 File Format
 
@@ -126,11 +142,12 @@ Sites SHOULD default to `read` unless explicitly designed for AI interaction.
 
 #### 3.4.1 robots.txt Integration
 
-Sites SHOULD reference `__ai_help.md` in their `robots.txt`:
+Sites SHOULD reference the AI help file in their `robots.txt`:
 
 ```
 # AI Agent Help
 User-agent: *
+Allow: /.well-known/__ai_help
 Allow: /__ai_help.md
 
 # AI-specific user agents
@@ -146,7 +163,7 @@ Crawl-delay: 1
 Sites MAY include a meta tag in their HTML `<head>`:
 
 ```html
-<meta name="ai-help" content="/__ai_help.md">
+<meta name="ai-help" content="/.well-known/__ai_help">
 ```
 
 #### 3.4.3 HTTP Headers
@@ -154,12 +171,12 @@ Sites MAY include a meta tag in their HTML `<head>`:
 Sites MAY include a custom HTTP header on responses:
 
 ```
-X-AI-Help: /__ai_help.md
+X-AI-Help: /.well-known/__ai_help
 ```
 
-#### 3.4.4 .well-known
+#### 3.4.4 Legacy Redirect
 
-Sites MAY provide a redirect from `/.well-known/ai-help` to the root `__ai_help.md`.
+For backward compatibility, sites MAY provide a redirect from `/__ai_help.md` to `/.well-known/__ai_help`.
 
 ### 3.5 Content Requirements
 
@@ -973,7 +990,7 @@ Example:
 
 This site has AI help documentation at multiple levels:
 
-- `/` - General site information (this file)
+- `/.well-known/__ai_help` - General site information (this file)
 - `/app/__ai_help.md` - Main application features
 - `/app/dashboard/__ai_help.md` - Dashboard-specific operations
 - `/app/inventory/__ai_help.md` - Inventory management features
@@ -1186,7 +1203,7 @@ This specification is informed by:
 
 ## Appendix A: Complete Example
 
-### Root File: `https://example.com/__ai_help.md`
+### Root File: `https://example.com/.well-known/__ai_help`
 
 ```markdown
 ---
@@ -1242,7 +1259,7 @@ X-RateLimit-Reset: 1736265600
 
 This site has AI help documentation at multiple levels:
 
-- `/` - This file (general site information)
+- `/.well-known/__ai_help` - This file (general site information)
 - `/app/__ai_help.md` - Main application features
 - `/api/__ai_help.md` - API-specific details
 
@@ -1424,7 +1441,7 @@ if response.status_code == 429:
 
 ### Required
 
-- [ ] Create `__ai_help.md` at site root
+- [ ] Create `.well-known/__ai_help` at site root (RFC 8615 compliant)
 - [ ] Add required YAML front matter (§3.2.2):
   - [ ] `abt` - Link to dashdash repo
   - [ ] `sub` - Subdirectory files exist
@@ -1486,7 +1503,7 @@ if response.status_code == 429:
 - [ ] Add to robots.txt (optional, §3.4.1)
 - [ ] Add HTML meta tag (optional, §3.4.2)
 - [ ] Add HTTP header (optional, §3.4.3)
-- [ ] Add .well-known redirect (optional, §3.4.4)
+- [ ] Add legacy redirect from `/__ai_help.md` (optional, §3.4.4)
 - [ ] Create subdirectory files if needed
 - [ ] Set `sub: true` in root if hierarchical
 
