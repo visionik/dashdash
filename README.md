@@ -1,385 +1,225 @@
-# CLI AI Help Specification
+# dashdash
 
 **Version:** 1.0.0  
 **Status:** Draft  
-**Last Updated:** 2025-12-30
+**Last Updated:** 2026-01-07
 
-## 1. Introduction
+## Overview
 
-This document specifies a standard approach for Command-Line Interface (CLI) tools to provide AI-optimized usage guidance through a dedicated `--ai-help` parameter. As Large Language Models (LLMs) and AI agents increasingly interact with CLI tools, specialized documentation format requirements emerge that differ from traditional human-oriented help text.
+dashdash is a specification for enabling AI agents to discover and understand how to interact with software tools and services. It provides standardized formats for exposing capabilities, constraints, and usage patterns across four primary access methods: Web, API, CLI, and MCP.
 
-### 1.1 Key Words
+## The Four Access Methods
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).
+Modern software services are typically accessible through up to four different interfaces:
 
-## 2. Rationale
+1. **Web** - Browser-based interfaces (HTML/JavaScript applications)
+2. **API** - REST, GraphQL, or other programmatic endpoints
+3. **CLI** - Command-line interface tools
+4. **MCP** - Model Context Protocol servers
 
-### 2.1 Problem Statement
+### Current State
 
-Traditional `--help` output is optimized for human readability with formatting, examples, and concise summaries. AI agents have different needs:
+Each access method has varying levels of AI agent support:
 
-- **Comprehensive date/time format specifications** - AIs commonly make mistakes with date parsing
-- **Explicit negative examples** - "Do NOT use X" is clearer than omitting X
-- **Error handling guidance** - Common failure modes and solutions
-- **Output format recommendations** - Which format is best for programmatic parsing
-- **Troubleshooting guides** - Structured error diagnosis
-- **Exhaustive option enumeration** - All valid combinations, not just common ones
+- **APIs** generally have good documentation, but it's often web-based and optimized for human reading
+- **MCP** (Model Context Protocol) has native AI discovery built-in through the `tools/list` mechanism, where agents can query available tools and receive structured metadata including names, descriptions, and input schemas
+- **Web** interfaces rely on HTML structure and navigation, which can be ambiguous for agents
+- **CLIs** provide `--help` text optimized for humans, not machines
 
-### 2.2 Benefits
+### The dashdash Solution
 
-- **Improved AI accuracy** - Reduces hallucination and incorrect command generation
-- **Reduced user friction** - AIs can self-serve without iterative trial-and-error
-- **Standardization** - Common flag creates predictable discovery pattern
-- **Separation of concerns** - Keeps human help concise while providing AI detail
+dashdash brings structured, AI-optimized discovery to all four access methods:
 
-## 3. Specification
+- **CLI**: `--ai-help` flag outputs markdown with YAML front matter containing comprehensive usage guidance
+- **Web**: `__ai_help.md` files (at root and subdirectories) provide structured site navigation and interaction rules
+- **API**: Web-based API documentation can implement `__ai_help.md` to augment existing OpenAPI/Swagger specs
+- **MCP**: Already has native tool discovery; dashdash front matter can reference MCP servers as alternatives
 
-### 3.1 Flag Naming
+## Key Principles
 
-#### 3.1.1 Primary Flag
+### 1. Structured Metadata (Front Matter)
 
-CLI tools MUST implement the flag `--ai-help`.
+All dashdash formats use YAML front matter to provide machine-readable metadata:
 
-**Rationale:** The term "ai-help" is:
-- Self-documenting and immediately recognizable
-- Clear about audience (AI agents/LLMs)
-- Parallel to existing `--help` convention
-- Short and memorable
-
-#### 3.1.2 Alternative Names
-
-CLI tools MAY provide aliases such as:
-- `--llm-help`
-- `--agent-help`
-- `--machine-help`
-
-However, `--ai-help` MUST be the primary and documented option.
-
-#### 3.1.3 Deprecated Names
-
-Historical implementations using `--llmhelp` (no hyphen) SHOULD migrate to `--ai-help` to maintain consistency across the ecosystem.
-
-### 3.2 Behavior
-
-#### 3.2.1 Output and Exit
-
-When invoked, the tool MUST:
-1. Output the AI-optimized help content to stdout
-2. Exit with status code 0
-3. Skip all other processing (similar to `--help`)
-
-#### 3.2.2 Eagerness
-
-The `--ai-help` flag SHOULD be processed eagerly, before:
-- Credential validation
-- API connections
-- File system operations
-- Other option validation
-
-This allows AIs to learn tool usage without having prerequisite configuration.
-
-### 3.3 Discoverability
-
-#### 3.3.1 Main Help Integration
-
-The CLI tool's primary help text (accessed via `--help` or no arguments) MUST mention the `--ai-help` option prominently. 
-
-RECOMMENDED placement:
-```
-CLI tool for accessing [service/data].
-💡 LLMs/agents: run '[toolname] --ai-help' for detailed usage guidance.
+```yaml
+---
+abt: https://github.com/visionik/dashdash
+sub: false                    # Hierarchical support (commands/subdirs)
+ver: [specification version]   # Which spec version is implemented
+acl: read                      # Access control level
+web: [url or none]             # Web alternative
+cli: [url or none]             # CLI alternative  
+mcp: [url or none]             # MCP server alternative
+api: [url or none]             # API documentation alternative
+---
 ```
 
-#### 3.3.2 Options List
+### 2. Cross-Reference Alternatives
 
-The `--ai-help` flag MUST appear in the options section of standard help output with a description such as:
-```
---ai-help    Show comprehensive usage guide for LLMs/agents and exit.
-```
+Each access method documents alternatives:
+- CLI help references web interface, API, and MCP alternatives
+- Web `__ai_help.md` references CLI tools, APIs, and MCP servers
+- This allows agents to choose the most appropriate access method
 
-#### 3.3.3 No-Argument Behavior
+### 3. AI-Optimized Content
 
-When a user runs the CLI with no arguments or commands, the tool SHOULD display help content that includes mention of `--ai-help`.
+Unlike human-oriented documentation, dashdash formats prioritize:
 
-### 3.4 Content Requirements
+- **Explicit negative examples** - "Do NOT use X" instead of omitting X
+- **Complete format specifications** - All supported date formats, not just common ones
+- **Error message mappings** - Actual errors with root causes and fixes
+- **Structured constraints** - Rate limits, quotas, permissions
+- **Programmatic recommendations** - Prefer `--json` over human-readable formats
 
-#### 3.4.1 Format
+### 4. Hierarchical Structure
 
-The output MUST be in markdown format with:
-- Clear section headers (using `##` and `###`)
-- Code blocks with appropriate language tags
-- Lists for enumeration
-- Emphasis for warnings (e.g., ⚠️, ❌, ✅ emoji)
+Both web and CLI support hierarchical help:
 
-#### 3.4.2 Required Sections
+- **Web**: Root `__ai_help.md` + subdirectory files (`/app/__ai_help.md`, `/api/__ai_help.md`)
+- **CLI**: Global `--ai-help` + command-level help (`tool list --ai-help`, `tool fetch --ai-help`)
 
-The help content MUST include:
+The `sub:` field in front matter indicates whether hierarchical help exists.
 
-1. **Overview** - Brief tool description and capabilities
-2. **Setup/Prerequisites** - Authentication, installation, configuration
-3. **Command Reference** - Complete list of commands/subcommands
-4. **Input Specification** - Detailed parameter/argument formats
-5. **Output Formats** - Available formats and recommendations
-6. **Examples** - Common use cases with actual commands
+### 5. Discoverability
 
-#### 3.4.3 Recommended Sections
+Each format includes multiple discovery mechanisms:
 
-The help content SHOULD include:
+- **CLI**: Mentioned in `--help` output, processed eagerly (before auth/config)
+- **Web**: Referenced in `robots.txt`, HTML meta tags, HTTP headers, `.well-known/ai-help`
 
-1. **Troubleshooting Guide** - Common errors with solutions
-2. **Negative Examples** - Explicit "do NOT do this" guidance
-3. **Format Conversion Guide** - How to transform common query patterns
-4. **Best Practices** - LLM-specific recommendations (e.g., "Always use --json")
-5. **Quick Reference Card** - Table of common operations
-6. **Error Handling** - Expected failure modes
+## Specifications
 
-#### 3.4.4 Date/Time Handling
+dashdash consists of two complementary specifications:
 
-If the CLI accepts date or time parameters, the documentation MUST:
-- List ALL supported formats with examples
-- List common UNSUPPORTED formats with explanations
-- Provide conversion examples for ambiguous queries
-- Include timezone handling guidance
+### 📋 [CLI Specification](./proposal-cli--ai-help.md)
 
-Example:
-```markdown
-### ✅ SUPPORTED DATE FORMATS
-- `2025-12-30` - ISO 8601 date
-- `"7 days"` - Relative range
+Defines the `--ai-help` flag for command-line tools.
 
-### ❌ UNSUPPORTED FORMATS
-- `2025-12-30 to 2025-12-31` - Do NOT use "to" syntax
-  Error: "Invalid date specification"
+**Key Features:**
+- Eager flag processing (works without credentials)
+- YAML front matter with metadata
+- Command-level help for complex CLIs
+- Comprehensive date/time format documentation
+- Output format recommendations (prefer `--json`)
+- Error troubleshooting guides
+
+**Example:**
+```bash
+tool --ai-help          # Shows full help with front matter
+tool list --ai-help     # Command-specific help
 ```
 
-#### 3.4.5 Output Format Guidance
+### 🌐 [Web Specification](./proposal-web__ai_help.md)
 
-For CLIs with multiple output formats, the documentation MUST:
-- List all available formats
-- Explicitly recommend the best format for programmatic consumption
-- Warn against formats that are difficult to parse
+Defines the `__ai_help.md` file convention for websites and web applications.
 
-Example:
-```markdown
-⚠️ **LLM Best Practice: Always Use --json**
+**Key Features:**
+- Hierarchical file structure (root + subdirectories)
+- Access control levels (none, read, browse, interact, full)
+- Form field specifications with validation rules
+- Authentication flow documentation
+- Rate limiting and quota information
+- HTTP error code mappings
 
-✅ RECOMMENDED for programmatic analysis:
-    tool fetch --json
-
-❌ NOT RECOMMENDED for parsing:
-    tool fetch --tree
+**Example:**
+```
+https://example.com/__ai_help.md
+https://example.com/app/__ai_help.md
+https://example.com/api/__ai_help.md
 ```
 
-#### 3.4.6 Error Examples
+## Use Cases
 
-The documentation SHOULD include:
-- Actual error messages the tool produces
-- Root cause explanations
-- Corrected command examples
+### For CLI Tool Developers
 
-Example:
-```markdown
-### Error: "Got unexpected extra argument"
-**Cause:** Multiple arguments without proper quoting
+Implement `--ai-help` to help AI agents use your tool correctly:
+- Reduce support burden from AI-generated incorrect commands
+- Provide explicit date format specifications
+- Recommend programmatic output formats
+- Document common errors and solutions
 
-❌ WRONG: tool fetch 2025-01-01 2025-01-31
-✅ CORRECT: tool fetch "2025-01-01 30 days"
-```
+### For Web Application Developers
 
-### 3.5 Content Style
+Add `__ai_help.md` to enable AI agents to interact with your site:
+- Define what operations are allowed vs. forbidden
+- Specify form field formats and validation
+- Document rate limits and authentication
+- Provide API alternatives for efficiency
 
-#### 3.5.1 Verbosity
+### For AI Agent Developers
 
-AI help content SHOULD be more verbose than human help. Explicit is better than concise.
+Use dashdash formats to discover and understand tools:
+- Check for `--ai-help` or `__ai_help.md` before attempting interaction
+- Parse front matter to discover alternative access methods
+- Use structured error guidance to handle failures gracefully
+- Respect `acl` (access control level) constraints
 
-#### 3.5.2 Tone
+## Relationship to Existing Standards
 
-Content SHOULD:
-- Be direct and imperative
-- Use active voice
-- Avoid ambiguity
-- Repeat important information if needed
+dashdash complements, rather than replaces, existing documentation standards:
 
-#### 3.5.3 Visual Markers
+- **OpenAPI/Swagger**: API schemas remain authoritative; `__ai_help.md` can augment with AI-specific guidance
+- **man pages**: Traditional Unix documentation for humans; `--ai-help` provides AI-oriented supplement
+- **MCP tools/list**: MCP's native discovery is already optimal; dashdash references MCP as an alternative
+- **robots.txt**: Web crawling policies; `__ai_help.md` focuses on programmatic interaction
 
-Content SHOULD use emoji or symbols to highlight:
-- ✅ Correct examples
-- ❌ Incorrect examples  
-- ⚠️ Important warnings
-- 💡 Tips and best practices
-- 🔧 Troubleshooting steps
+## Implementation Status
 
-## 4. Implementation Guidance
+**Status:** Draft specification seeking feedback
 
-### 4.1 File vs. Inline
+**Reference Implementation:**
+- [OuraCLI](https://github.com/visionik/ouracli) - First CLI to implement `--ai-help`
 
-Implementations MAY either:
-1. Store help content in a separate markdown file (e.g., `docs/ai-help.md`)
-2. Embed content inline in source code
-
-RECOMMENDED approach: Separate markdown file for easier maintenance and version control.
-
-### 4.2 Maintenance
-
-The AI help content SHOULD:
-- Be updated whenever command syntax changes
-- Include version information or date stamp
-- Be reviewed by both humans and AIs during testing
-- Track common AI mistakes and address them in documentation
-
-### 4.3 Testing
-
-Implementers SHOULD:
-- Test that `--ai-help` exits without side effects
-- Verify markdown renders correctly in common tools
-- Validate that examples are copy-paste executable
-- Test with actual AI agents to identify gaps
-
-### 4.4 Examples by Framework
-
-#### 4.4.1 Python (Click)
-```python
-@click.command()
-@click.option('--ai-help', is_flag=True, is_eager=True, 
-              help='Show AI/LLM usage guide and exit')
-def cli(ai_help):
-    if ai_help:
-        click.echo(load_ai_help())
-        raise SystemExit(0)
-```
-
-#### 4.4.2 Python (Typer)
-```python
-def ai_help_callback(value: bool) -> None:
-    if value:
-        typer.echo(show_ai_help())
-        raise typer.Exit()
-
-@app.callback()
-def main(
-    ai_help: bool = typer.Option(
-        False, "--ai-help",
-        callback=ai_help_callback,
-        is_eager=True,
-        help="Show AI/LLM usage guide"
-    )
-): ...
-```
-
-#### 4.4.3 Go (Cobra)
-```go
-var aiHelpFlag bool
-
-func init() {
-    rootCmd.PersistentFlags().BoolVar(&aiHelpFlag, 
-        "ai-help", false, 
-        "Show AI/LLM usage guide and exit")
-}
-
-func Execute() {
-    if aiHelpFlag {
-        fmt.Println(getAIHelp())
-        os.Exit(0)
-    }
-    rootCmd.Execute()
-}
-```
-
-## 5. Evolution and Versioning
-
-### 5.1 Specification Versioning
-
-This specification uses semantic versioning (MAJOR.MINOR.PATCH):
-- MAJOR: Incompatible changes to flag name or behavior
-- MINOR: New recommended sections or practices
+**Specification Versioning:**
+- Uses semantic versioning (MAJOR.MINOR.PATCH)
+- MAJOR: Incompatible changes to format or behavior
+- MINOR: New recommended sections or fields
 - PATCH: Clarifications and examples
 
-### 5.2 Content Versioning
+## Contributing
 
-Individual CLI tools MAY version their AI help content. RECOMMENDED format:
-```markdown
-# Tool Name AI Help Guide
-**Version:** 2.1.0
-**Last Updated:** 2025-12-30
-```
+This specification is in draft status and welcomes feedback:
 
-## 6. Security Considerations
+- File issues for ambiguities or missing use cases
+- Share implementations to inform specification evolution
+- Propose additional access methods or metadata fields
+- Test with various AI agents and report findings
 
-### 6.1 Information Disclosure
+## Future Considerations
 
-AI help content SHOULD NOT include:
-- API keys, tokens, or credentials (even examples)
-- Internal system paths beyond necessary examples
-- Sensitive business logic or rate limits
-- Security vulnerabilities or known exploits
+Potential future enhancements being considered:
 
-### 6.2 Injection Risks
-
-If AI help content is dynamically generated:
-- Input MUST be sanitized
-- Template injection MUST be prevented
-- Content SHOULD be static when possible
-
-## 7. Future Considerations
-
-### 7.1 Machine-Readable Format
-
-Future versions MAY specify:
-- JSON schema for structured help content
-- OpenAPI-like command specifications
+### Machine-Readable Schemas
+- JSON-LD structured data
 - Formal grammar definitions for inputs
+- OpenAPI-like schemas for CLI commands
 
-### 7.2 Interactive Mode
-
-Future versions MAY specify:
+### Interactive Discovery
 - `--ai-help interactive` for Q&A mode
-- Structured queries (e.g., `--ai-help dates`)
-- Multi-language support
+- Structured queries (`--ai-help dates`, `--ai-help auth`)
+- Dynamic help based on user permissions
 
-## 8. References
+### Multi-Language Support
+- Content negotiation via HTTP headers or env vars
+- Multiple language files (`__ai_help.en.md`, `__ai_help.es.md`)
 
-- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) - Key words for use in RFCs
+## References
+
+- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) - Key words for specifications
 - [CommonMark](https://commonmark.org/) - Markdown specification
-- [CLI Guidelines](https://clig.dev/) - General CLI best practices
-- [GNU Standards for CLIs](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces.html)
+- [YAML](https://yaml.org/) - Front matter format
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification
+- [OpenAPI](https://www.openapis.org/) - API specification format
 
-## 9. Acknowledgments
+## License
+
+This specification is released under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) - dedicated to the public domain.
+
+## Acknowledgments
 
 This specification is informed by:
-- Real-world LLM interactions with CLI tools
-- Common patterns in AI agent error logs
-- User feedback on AI-generated command suggestions
-- The OuraCLI reference implementation
-
-## Appendix A: Complete Example
-
-See OuraCLI's implementation:
-- Flag definition: `src/ouracli/cli.py`
-- Help content: `src/ouracli/llm_help.py`
-- User-facing result: `ouracli --ai-help`
-
-Key features demonstrated:
-- Prominent discoverability in main help
-- Comprehensive date format documentation with negative examples
-- Output format recommendations for AI parsing
-- Troubleshooting guide with actual error messages
-- Quick reference card for common operations
-- Explicit best practices for LLMs
-
-## Appendix B: Implementation Checklist
-
-- [ ] Add `--ai-help` flag to CLI
-- [ ] Make flag eager (processes before other validation)
-- [ ] Output markdown-formatted content to stdout
-- [ ] Exit with code 0 after output
-- [ ] Include all required sections (§3.4.2)
-- [ ] Mention `--ai-help` in main help text
-- [ ] Add `--ai-help` to options list
-- [ ] Document all date/time formats if applicable
-- [ ] Provide output format recommendations
-- [ ] Include error examples with solutions
-- [ ] Use visual markers (✅, ❌, ⚠️, 💡)
-- [ ] Test with actual AI agent
-- [ ] Validate examples are executable
-- [ ] Review for information disclosure
-- [ ] Add version/date to content
+- Real-world AI agent interactions with CLI tools and web services
+- Common error patterns in LLM-generated commands
+- The Model Context Protocol's tool discovery mechanism
+- Existing standards like OpenAPI, man pages, and robots.txt
+- Feedback from the OuraCLI implementation
