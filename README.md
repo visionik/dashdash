@@ -77,9 +77,32 @@ Extends MCP servers with discovery metadata and an `ai_help` method.
 - `ai_help` method returning markdown or JSON
 - Cross-references to CLI, API, and Web alternatives
 
-### 🔧 [Go/Cobra MCP Integration](./proposal-go-cobra-mcp.md)
+### 🔧 [Go/Cobra Integration](./proposal--go--cobra-example.md)
 
-Reference implementation for Go CLI tools using Cobra.
+Automate `--ai-help` and MCP server generation for Go CLI tools using Cobra.
+
+```go
+// Add to existing Cobra app
+dashdash.Integrate(rootCmd, &dashdash.Config{
+    Name:        "myapp",
+    Description: "CLI for MyApp. Use when user asks to...",
+    WebURL:      "https://myapp.com",
+    APIURL:      "https://api.myapp.com/docs",
+})
+```
+
+```bash
+myapp --ai-help      # Generated markdown with front matter
+myapp --mcp-serve    # Auto-generated MCP server
+```
+
+**Key Features:**
+- Introspects Cobra command tree automatically
+- Generates YAML front matter from config
+- Creates "When to Use" from descriptions/annotations
+- Builds "Quick Reference" from all commands
+- Exposes commands as MCP tools with type mapping
+- Annotation system for custom metadata
 
 ## Front Matter Structure
 
@@ -257,6 +280,7 @@ dashdash complements existing standards:
 - Added required "When to Use" and "Quick Reference" sections
 - Combined web proposals into llms.txt enhancements
 - Added MCP server enhancements specification
+- Expanded Go/Cobra integration to cover both `--ai-help` and MCP automation
 - Added cross-platform discovery emphasis
 
 **v0.1.0 (2026-01-07):**
