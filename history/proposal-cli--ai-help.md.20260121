@@ -1,8 +1,8 @@
 # CLI AI Help Specification
 
-**Version:** 0.2.0  
+**Version:** 1.0.0  
 **Status:** Draft  
-**Last Updated:** 2026-01-21
+**Last Updated:** 2025-12-30
 
 ## 1. Introduction
 
@@ -12,40 +12,25 @@ This document specifies a standard approach for Command-Line Interface (CLI) too
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).
 
-### 1.2 Design Priorities
-
-The `--ai-help` output MUST serve three priorities, in order:
-
-1. **Enable creation of SKILL.md files** — The output MUST provide all information necessary for AI agents or developers to create skill definition files (such as those used by Claude Code, Clawdbot, or other agent frameworks). This includes tool identity, triggering context, and operational guidance.
-
-2. **Enable discovery of alternative interaction methods** — The output MUST document other ways to interact with the underlying product or service, including REST APIs, web interfaces, MCP servers, and other programmatic access methods.
-
-3. **Keep documentation bound to the CLI itself** — The output MUST be self-contained within the CLI binary to simplify versioning, packaging, and distribution. The documentation travels with the tool.
-
-The output MAY provide additional details beyond these priorities, such as troubleshooting guides, performance characteristics, and advanced usage patterns.
-
 ## 2. Rationale
 
 ### 2.1 Problem Statement
 
 Traditional `--help` output is optimized for human readability with formatting, examples, and concise summaries. AI agents have different needs:
 
-- **Skill creation support** — AIs need structured metadata to create skill definitions
-- **Triggering context** — AIs need to know WHEN to use the tool, not just HOW
-- **Comprehensive date/time format specifications** — AIs commonly make mistakes with date parsing
-- **Explicit negative examples** — "Do NOT use X" is clearer than omitting X
-- **Error handling guidance** — Common failure modes and solutions
-- **Output format recommendations** — Which format is best for programmatic parsing
-- **Alternative access methods** — Discovery of APIs, web interfaces, and MCP servers
+- **Comprehensive date/time format specifications** - AIs commonly make mistakes with date parsing
+- **Explicit negative examples** - "Do NOT use X" is clearer than omitting X
+- **Error handling guidance** - Common failure modes and solutions
+- **Output format recommendations** - Which format is best for programmatic parsing
+- **Troubleshooting guides** - Structured error diagnosis
+- **Exhaustive option enumeration** - All valid combinations, not just common ones
 
 ### 2.2 Benefits
 
-- **Skill generation** — Enables automated or assisted creation of SKILL.md files
-- **Improved AI accuracy** — Reduces hallucination and incorrect command generation
-- **Reduced user friction** — AIs can self-serve without iterative trial-and-error
-- **Standardization** — Common flag creates predictable discovery pattern
-- **Separation of concerns** — Keeps human help concise while providing AI detail
-- **Self-contained versioning** — Documentation version matches CLI version
+- **Improved AI accuracy** - Reduces hallucination and incorrect command generation
+- **Reduced user friction** - AIs can self-serve without iterative trial-and-error
+- **Standardization** - Common flag creates predictable discovery pattern
+- **Separation of concerns** - Keeps human help concise while providing AI detail
 
 ## 3. Specification
 
@@ -124,149 +109,31 @@ The output MUST be markdown with YAML front matter (following the dashdash forma
 
 ##### 3.4.1.1 Required Front Matter
 
-The front matter MUST include the following fields:
+The front matter MUST include:
 
 ```yaml
 ---
-# Tool Identity (REQUIRED for skill creation)
-name: tool-name
-description: >
-  Brief description of what this tool does.
-  Use when user asks to [specific triggers].
-
-# Specification Reference (REQUIRED)
-spec-url: https://github.com/visionik/dashdash
-spec-version: 0.2.0
-
-# Subcommand Support (REQUIRED)
-subcommand-help: false
-
-# Access Control (REQUIRED)
-access-level: read
-
-# Alternative Access Methods (REQUIRED)
-web-url: https://example.com
-mcp-url: none
-api-url: https://api.example.com/docs
+abt: https://github.com/visionik/dashdash
+sub: false
+ver: https://github.com/visionik/dashdash/blob/main/README.md#v1.0.0
+acl: read
+web: https://example.com
+mcp: none
+api: https://api.example.com/docs
 ---
 ```
 
 **Field Definitions:**
 
-**Tool Identity Fields:**
+- **abt** (REQUIRED): Link to the dashdash GitHub repository
+- **sub** (REQUIRED): Boolean indicating whether the CLI supports command-level `--ai-help` (e.g., `cli list --ai-help`, `cli fetch --ai-help`). Set to `false` if only global `--ai-help` is supported.
+- **ver** (REQUIRED): Link to the version of this specification the output implements
+- **acl** (REQUIRED): AI usage access level - typically `read` for read-only tools, `interact` for tools that modify data, or `full` for unrestricted access
+- **web** (REQUIRED): URL to web interface/application alternative, or `none` if no web alternative exists
+- **mcp** (REQUIRED): URL to MCP server documentation, or `none` if no MCP alternative exists
+- **api** (REQUIRED): URL to API documentation, or `none` if no API alternative exists
 
-- **name** (REQUIRED): Canonical name for the tool. MUST use lowercase letters, numbers, and hyphens only. Maximum 64 characters. This field is REQUIRED for skill creation.
-
-- **description** (REQUIRED): What the tool does and when to use it. MUST include trigger phrases such as "Use when user asks to..." or "Use for...". This field is REQUIRED for skill creation as it determines when AI agents should invoke the tool.
-
-**Specification Fields:**
-
-- **spec-url** (REQUIRED): URL to the dashdash specification repository.
-
-- **spec-version** (REQUIRED): Version of this specification the output implements. MUST use semantic versioning (e.g., `0.2.0`).
-
-**Capability Fields:**
-
-- **subcommand-help** (REQUIRED): Boolean indicating whether the CLI supports command-level `--ai-help` (e.g., `cli list --ai-help`, `cli fetch --ai-help`). Set to `false` if only global `--ai-help` is supported.
-
-- **access-level** (REQUIRED): AI usage access level. Valid values:
-  - `read` — Read-only operations, no side effects
-  - `interact` — Can modify data or state
-  - `full` — Unrestricted access including destructive operations
-
-**Alternative Access Method Fields:**
-
-- **web-url** (REQUIRED): URL to web interface or application alternative. Use `none` if no web alternative exists.
-
-- **mcp-url** (REQUIRED): URL to MCP (Model Context Protocol) server documentation or repository. Use `none` if no MCP alternative exists.
-
-- **api-url** (REQUIRED): URL to REST API documentation. Use `none` if no API alternative exists.
-
-##### 3.4.1.2 Recommended Front Matter
-
-The front matter SHOULD include the following fields when applicable:
-
-```yaml
----
-# Argument Hint (RECOMMENDED)
-argument-hint: "[command] [options]"
-
-# Installation Information (RECOMMENDED)
-install:
-  brew: "org/tap/formula"
-  npm: "@org/package"
-  pip: "package-name"
-  cargo: "crate-name"
-  go: "github.com/org/repo"
-
-# Requirements (RECOMMENDED)
-requires:
-  bins:
-    - required-binary
-  os:
-    - darwin
-    - linux
-  env:
-    - REQUIRED_ENV_VAR
-
-# Invocation Control (RECOMMENDED for skill frameworks)
-invocation:
-  model-invocable: true
-  user-invocable: true
-  allowed-tools:
-    - Bash
-    - Read
-
-# Documentation Links (RECOMMENDED)
-homepage: https://tool.example.com
-repository: https://github.com/org/tool
----
-```
-
-**Field Definitions:**
-
-- **argument-hint** (RECOMMENDED): Hint shown during autocomplete to indicate expected arguments. Example: `[issue-number]` or `[filename] [format]`.
-
-- **install** (RECOMMENDED): Structured installation instructions. Each key represents a package manager, and the value is the package identifier. Implementations SHOULD include at least one installation method.
-
-- **requires** (RECOMMENDED): Runtime requirements for the tool.
-  - **bins**: List of binary executables that MUST be available in PATH.
-  - **os**: List of supported operating systems. Valid values: `darwin`, `linux`, `windows`.
-  - **env**: List of environment variables that MUST be set.
-
-- **invocation** (RECOMMENDED): Controls for AI agent invocation behavior. These fields align with skill framework conventions:
-  - **model-invocable**: Boolean. If `true`, AI agents MAY automatically invoke this tool. If `false`, the tool SHOULD only be invoked by explicit user request.
-  - **user-invocable**: Boolean. If `true`, the tool appears in user-facing menus (e.g., `/tool` commands). If `false`, the tool is background knowledge only.
-  - **allowed-tools**: List of tools/permissions the skill may use when active.
-
-- **homepage** (RECOMMENDED): URL to the tool's primary documentation or marketing page.
-
-- **repository** (RECOMMENDED): URL to the source code repository.
-
-##### 3.4.1.3 Optional Front Matter
-
-The front matter MAY include the following fields:
-
-```yaml
----
-# Content Versioning (OPTIONAL)
-content-version: 1.2.0
-last-updated: 2026-01-21
-
-# Presentation (OPTIONAL)
-emoji: "🔧"
----
-```
-
-**Field Definitions:**
-
-- **content-version** (OPTIONAL): Version of the help content itself, independent of the CLI version.
-
-- **last-updated** (OPTIONAL): ISO 8601 date when the help content was last updated.
-
-- **emoji** (OPTIONAL): Single emoji character representing the tool for display purposes.
-
-##### 3.4.1.4 Markdown Content
+##### 3.4.1.2 Markdown Content
 
 Following the front matter, the markdown content MUST include:
 - Clear section headers (using `##` and `###`)
@@ -276,7 +143,7 @@ Following the front matter, the markdown content MUST include:
 
 #### 3.4.2 Command-Level Help
 
-For CLIs with `subcommand-help: true` in the front matter, individual commands MAY implement their own `--ai-help`:
+For CLIs with `sub: true` in the front matter, individual commands MAY implement their own `--ai-help`:
 
 ```bash
 cli --ai-help          # Global help with front matter
@@ -291,77 +158,32 @@ cli fetch --ai-help    # Command-specific help (no front matter)
 
 #### 3.4.3 Required Sections
 
-The help content MUST include the following sections:
+The help content MUST include:
 
-1. **When to Use** (§3.4.3.1) — Explicit triggers for when AI agents should use this tool
-2. **Overview** — Brief tool description and capabilities
-3. **Setup/Prerequisites** — Authentication, installation, configuration
-4. **Quick Reference** (§3.4.3.2) — Concise command reference for common operations
-5. **Command Reference** — Complete list of commands/subcommands
-6. **Input Specification** — Detailed parameter/argument formats
-7. **Output Formats** — Available formats and recommendations
-8. **Examples** — Common use cases with actual commands
-9. **Authentication and Prerequisites** (§3.4.10) — Required credentials, scopes, permissions
-10. **Rate Limits and Performance** (§3.4.13) — Quotas, timeouts, payload limits
-
-##### 3.4.3.1 When to Use Section
-
-The help content MUST include a "When to Use" section near the top of the document. This section is REQUIRED for skill creation and MUST clearly specify the contexts in which an AI agent should use this tool.
-
-The section MUST:
-- List specific user intents or queries that should trigger this tool
-- Use action-oriented language ("Use when user asks to...")
-- Be extractable for use in skill descriptions
-
-Example:
-```markdown
-## When to Use
-
-Use this tool when the user asks to:
-- Send, read, search, or draft emails
-- Create, list, or update calendar events
-- Upload, download, or share files in cloud storage
-- Read or write spreadsheet data
-- Manage contacts or address books
-
-Do NOT use this tool for:
-- Local file operations (use filesystem tools instead)
-- Non-Google cloud services
-```
-
-##### 3.4.3.2 Quick Reference Section
-
-The help content MUST include a "Quick Reference" section that provides a concise summary of common operations. This section SHOULD:
-- Include 10-20 of the most common operations
-- Use consistent formatting (command followed by description)
-- Be suitable for inclusion in a skill body
-
-Example:
-```markdown
-## Quick Reference
-
-- **Send email:** `tool mail send --to user@example.com --subject "Hi" --body "Hello"`
-- **Search mail:** `tool mail search 'from:someone newer_than:7d' --max 10`
-- **List events:** `tool calendar list --from 2026-01-01 --to 2026-01-31`
-- **Create event:** `tool calendar create --summary "Meeting" --from 2026-01-15T10:00 --to 2026-01-15T11:00`
-- **Upload file:** `tool drive upload ./document.pdf`
-- **Download file:** `tool drive download <file-id> --out ./local.pdf`
-```
+1. **Overview** - Brief tool description and capabilities
+2. **Setup/Prerequisites** - Authentication, installation, configuration
+3. **Command Reference** - Complete list of commands/subcommands
+4. **Input Specification** - Detailed parameter/argument formats
+5. **Output Formats** - Available formats and recommendations
+6. **Examples** - Common use cases with actual commands
+7. **Authentication and Prerequisites** (§3.4.10) - Required credentials, scopes, permissions
+8. **Rate Limits and Performance** (§3.4.13) - Quotas, timeouts, payload limits
 
 #### 3.4.4 Recommended Sections
 
 The help content SHOULD include:
 
-1. **Troubleshooting Guide** — Common errors with solutions
-2. **Negative Examples** — Explicit "do NOT do this" guidance
-3. **Format Conversion Guide** — How to transform common query patterns
-4. **Best Practices** — LLM-specific recommendations (e.g., "Always use --json")
-5. **Error Handling** — Expected failure modes
-6. **Input Schema** (§3.4.8) — JSON Schema or equivalent for parameters
-7. **Output Schema** (§3.4.9) — Expected response structures
-8. **Operational Semantics** (§3.4.11) — Idempotency, side effects, pagination
-9. **Capabilities and Tags** (§3.4.12) — Command categorization for discovery
-10. **Lifecycle Metadata** (§3.4.14) — Deprecations, versions, EOL schedules
+1. **Troubleshooting Guide** - Common errors with solutions
+2. **Negative Examples** - Explicit "do NOT do this" guidance
+3. **Format Conversion Guide** - How to transform common query patterns
+4. **Best Practices** - LLM-specific recommendations (e.g., "Always use --json")
+5. **Quick Reference Card** - Table of common operations
+6. **Error Handling** - Expected failure modes
+7. **Input Schema** (§3.4.8) - JSON Schema or equivalent for parameters
+8. **Output Schema** (§3.4.9) - Expected response structures
+9. **Operational Semantics** (§3.4.11) - Idempotency, side effects, pagination
+10. **Capabilities and Tags** (§3.4.12) - Command categorization for discovery
+11. **Lifecycle Metadata** (§3.4.14) - Deprecations, versions, EOL schedules
 
 #### 3.4.5 Date/Time Handling
 
@@ -573,10 +395,13 @@ Example:
 
 ### Permission Levels
 
-**Read commands** (`list`, `fetch`): Basic API key
-**Write commands** (`create`, `update`): API key + verified email
-**Admin commands** (`delete`, `admin`): OAuth token with admin scope
-**Export commands** (`export`): Requires paid plan
+| Command | Required Permission | Notes |
+|---------|--------------------|---------|
+| `list` | `read` | Basic API key |
+| `fetch` | `read` | Basic API key |
+| `create` | `write` | API key + verified email |
+| `delete` | `admin` | OAuth token with admin scope |
+| `export` | `read` + `export` | Requires paid plan |
 
 ### Connection State
 
@@ -626,10 +451,12 @@ Example:
 
 ### Side Effects
 
-**Read commands** (`list`, `fetch`): None (read-only)
-**Create commands**: Creates resource, sends webhook, logs event (requires manual delete to reverse)
-**Delete commands**: Soft-deletes resource, can restore within 30 days via `tool restore ID`
-**Export commands**: Generates async export job, sends email when ready (cannot cancel)
+| Command | Side Effects | Reversible? |
+|---------|-------------|-------------|
+| `list` | None (read-only) | N/A |
+| `create` | Creates resource, sends webhook, logs event | Requires manual delete |
+| `delete` | Soft-deletes resource, can restore within 30 days | `tool restore ID` |
+| `export` | Generates async export job, sends email when ready | Cannot cancel |
 
 ### Pagination
 
@@ -746,10 +573,11 @@ Example:
 ### Rate Limits
 
 **By Plan Tier:**
-
-- **Free:** 100 requests/hour, 10/min burst, 2 concurrent
-- **Pro:** 1,000 requests/hour, 100/min burst, 10 concurrent
-- **Enterprise:** 10,000 requests/hour, 1,000/min burst, 50 concurrent
+| Tier | Requests/Hour | Burst Limit | Concurrent Requests |
+|------|---------------|-------------|--------------------|
+| Free | 100 | 10/min | 2 |
+| Pro | 1,000 | 100/min | 10 |
+| Enterprise | 10,000 | 1,000/min | 50 |
 
 **Rate Limit Headers:**
 All responses include:
@@ -863,9 +691,11 @@ tool upgrade    # Upgrade to latest
 
 ⚠️ **Deprecated in v2.3.0 (Removed in v3.0.0):**
 
-- `tool fetch --format table` → Use `tool fetch --json | jq` (Reason: Inconsistent formatting)
-- `tool list --offset N` → Use `tool list --cursor TOKEN` (Reason: Unstable pagination)
-- `tool create --visibility V` → Use `tool create --type V` (Reason: Naming consistency)
+| Deprecated Command | Replacement | Reason |
+|-------------------|-------------|--------|
+| `tool fetch --format table` | `tool fetch --json \| jq` | Inconsistent formatting |
+| `tool list --offset N` | `tool list --cursor TOKEN` | Unstable pagination |
+| `tool create --visibility V` | `tool create --type V` | Naming consistency |
 
 **Migration Examples:**
 
@@ -903,9 +733,11 @@ tool whoami
 
 ### End-of-Life Schedule
 
-- **v1.x:** EOL 2025-06-01 ⚠️ Deprecated — Upgrade to v2.x
-- **v2.x:** EOL 2027-01-01 ✅ Supported — Current stable
-- **v3.x:** TBD 🚧 Beta — Preview available
+| Version | EOL Date | Status | Action Required |
+|---------|----------|--------|----------------|
+| v1.x | 2025-06-01 | ⚠️ Deprecated | Upgrade to v2.x |
+| v2.x | 2027-01-01 | ✅ Supported | Current stable |
+| v3.x | TBD | 🚧 Beta | Preview available |
 
 **Support Policy:**
 - Security fixes: Current major version only
@@ -961,7 +793,6 @@ Implementers SHOULD:
 - Verify markdown renders correctly in common tools
 - Validate that examples are copy-paste executable
 - Test with actual AI agents to identify gaps
-- Verify that a valid SKILL.md can be generated from the output
 
 ### 4.4 Examples by Framework
 
@@ -1018,13 +849,26 @@ func Execute() {
 ### 5.1 Specification Versioning
 
 This specification uses semantic versioning (MAJOR.MINOR.PATCH):
-- MAJOR: Incompatible changes to required fields or behavior
-- MINOR: New recommended sections or optional fields
+- MAJOR: Incompatible changes to flag name or behavior
+- MINOR: New recommended sections or practices
 - PATCH: Clarifications and examples
 
 ### 5.2 Content Versioning
 
-Individual CLI tools MAY include version information in the front matter using the optional `content-version` and `last-updated` fields.
+Individual CLI tools MAY include version information in the front matter. RECOMMENDED format:
+```yaml
+---
+abt: https://github.com/visionik/dashdash
+sub: false
+ver: https://github.com/visionik/dashdash/blob/main/README.md#v1.0.0
+acl: read
+web: none
+mcp: none
+api: none
+content_version: 2.1.0
+last_updated: 2025-12-30
+---
+```
 
 ## 6. Security Considerations
 
@@ -1059,22 +903,12 @@ Future versions MAY specify:
 - Structured queries (e.g., `--ai-help dates`)
 - Multi-language support
 
-### 7.3 Skill Generation Mode
-
-Future versions MAY specify:
-- `--ai-help --skill` for minimal SKILL.md-ready output
-- `--ai-help --skill-format clawdbot` for framework-specific output
-- `--ai-help --skill-format claude-code` for Claude Code format
-
 ## 8. References
 
-- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) — Key words for use in RFCs
-- [CommonMark](https://commonmark.org/) — Markdown specification
-- [CLI Guidelines](https://clig.dev/) — General CLI best practices
+- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) - Key words for use in RFCs
+- [CommonMark](https://commonmark.org/) - Markdown specification
+- [CLI Guidelines](https://clig.dev/) - General CLI best practices
 - [GNU Standards for CLIs](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces.html)
-- [Agent Skills](https://agentskills.io) — Open standard for AI agent skills
-- [Claude Code Skills](https://code.claude.com/docs/en/skills) — Claude Code skill documentation
-- [Model Context Protocol](https://modelcontextprotocol.io/) — MCP specification
 
 ## 9. Acknowledgments
 
@@ -1083,7 +917,6 @@ This specification is informed by:
 - Common patterns in AI agent error logs
 - User feedback on AI-generated command suggestions
 - The OuraCLI reference implementation
-- Analysis of Clawdbot and Claude Code skill formats
 
 ## Appendix A: Complete Example
 
@@ -1091,87 +924,31 @@ This specification is informed by:
 
 ```markdown
 ---
-# Tool Identity
-name: tool
-description: >
-  CLI for managing projects and tasks via API.
-  Use when user asks to list, create, update, or delete projects.
-  Use when user asks to manage tasks or check project status.
-
-# Specification
-spec-url: https://github.com/visionik/dashdash
-spec-version: 0.2.0
-
-# Capabilities
-subcommand-help: true
-access-level: interact
-
-# Alternative Access Methods
-web-url: https://example.com/app
-mcp-url: https://github.com/example/tool-mcp
-api-url: https://api.example.com/docs
-
-# Installation
-install:
-  brew: example/tap/tool
-  pip: tool-cli
-
-# Requirements
-requires:
-  bins:
-    - tool
-  env:
-    - TOOL_API_KEY
-
-# Invocation Control
-invocation:
-  model-invocable: true
-  user-invocable: true
-
-# Documentation
-homepage: https://tool.example.com
+abt: https://github.com/visionik/dashdash
+sub: true
+ver: https://github.com/visionik/dashdash/blob/main/README.md#v1.0.0
+acl: interact
+web: https://example.com/app
+mcp: https://github.com/example/tool-mcp
+api: https://api.example.com/docs
+content_version: 1.2.0
+last_updated: 2026-01-07
 ---
 
 # Tool AI Help Guide
 
-## When to Use
-
-Use this tool when the user asks to:
-- List, view, or search projects
-- Create new projects or tasks
-- Update existing project details or status
-- Delete or archive projects
-- Check project status or statistics
-- Export project data
-
-Do NOT use this tool for:
-- File system operations (use filesystem tools)
-- Non-Example.com services
-- Direct database access
-
 ## Overview
 
 Tool is a command-line interface for managing projects and tasks. It supports reading, creating, and updating resources via API.
-
-## Quick Reference
-
-- **List projects:** `tool list --json`
-- **Get project:** `tool fetch PROJECT_ID --json`
-- **Create project:** `tool create --name "Name" --type private --json`
-- **Update project:** `tool update PROJECT_ID --status active --json`
-- **Delete project:** `tool delete PROJECT_ID --json`
-- **Filter by date:** `tool list --after 2026-01-01 --json`
-- **Search:** `tool search "query" --json`
-- **Export:** `tool export --format csv --out projects.csv`
 
 ## Setup/Prerequisites
 
 ### Installation
 
 ```bash
-pip install tool-cli
+pip install tool
 # or
-brew install example/tap/tool
+brew install tool
 ```
 
 ### Authentication
@@ -1196,19 +973,19 @@ tool --api-key YOUR_KEY list
 
 This CLI supports command-level `--ai-help` for detailed guidance:
 
-- `tool list --ai-help` — List resources
-- `tool fetch --ai-help` — Fetch specific resource
-- `tool create --ai-help` — Create new resource
-- `tool update --ai-help` — Update existing resource
+- `tool list --ai-help` - List resources
+- `tool fetch --ai-help` - Fetch specific resource
+- `tool create --ai-help` - Create new resource
+- `tool update --ai-help` - Update existing resource
 
 ### Global Options
 
-- `--api-key KEY` — API authentication key
-- `--json` — Output in JSON format (RECOMMENDED for AI agents)
-- `--verbose` — Enable debug logging
-- `--version` — Show version and exit
-- `--help` — Show human-oriented help
-- `--ai-help` — Show this AI-oriented help
+- `--api-key KEY` - API authentication key
+- `--json` - Output in JSON format (RECOMMENDED for AI agents)
+- `--verbose` - Enable debug logging
+- `--version` - Show version and exit
+- `--help` - Show human-oriented help
+- `--ai-help` - Show this AI-oriented help
 
 ## Input Specification
 
@@ -1216,18 +993,18 @@ This CLI supports command-level `--ai-help` for detailed guidance:
 
 #### ✅ SUPPORTED FORMATS
 
-- `2026-01-07` — ISO 8601 date
-- `2026-01-07T15:30:00Z` — ISO 8601 datetime (UTC)
-- `"7 days"` — Relative time range
-- `"yesterday"`, `"today"`, `"last week"` — Natural language
+- `2026-01-07` - ISO 8601 date
+- `2026-01-07T15:30:00Z` - ISO 8601 datetime (UTC)
+- `"7 days"` - Relative time range
+- `"yesterday"`, `"today"`, `"last week"` - Natural language
 
 #### ❌ UNSUPPORTED FORMATS
 
-- `01/07/2026` — Ambiguous MM/DD/YYYY format
+- `01/07/2026` - Ambiguous MM/DD/YYYY format
   **Error:** "Invalid date format"
   **Fix:** Use ISO 8601: `2026-01-07`
 
-- `2026-01-07 to 2026-01-14` — "to" syntax not supported
+- `2026-01-07 to 2026-01-14` - "to" syntax not supported
   **Error:** "Got unexpected extra argument"
   **Fix:** Use quoted range: `"2026-01-07 7 days"`
 
@@ -1343,43 +1120,12 @@ tool list --after "2026-01-01 7 days"
 💡 **Use ISO 8601 dates** to avoid ambiguity
 
 💡 **Check command exit codes**:
-- `0` — Success
-- `1` — General error
-- `2` — Authentication error
-- `3` — Invalid arguments
+- `0` - Success
+- `1` - General error
+- `2` - Authentication error
+- `3` - Invalid arguments
 
-💡 **Handle rate limits gracefully** — API allows 1000 requests/hour
-
-## Authentication
-
-### Required Credentials
-
-**API Key (Required for all commands):**
-- Format: `sk_live_[a-zA-Z0-9]{32}` or `sk_test_[a-zA-Z0-9]{32}`
-- Obtain from: https://example.com/settings/api
-- Provide via: `TOOL_API_KEY` env var or `--api-key` flag
-
-### Permission Levels
-
-- **Read commands** (`list`, `fetch`): Basic API key
-- **Write commands** (`create`, `update`): API key + verified email
-- **Admin commands** (`delete`): OAuth token with admin scope
-
-## Rate Limits and Performance
-
-### Rate Limits
-
-- **Free:** 100 requests/hour
-- **Pro:** 1,000 requests/hour
-- **Enterprise:** 10,000 requests/hour
-
-### Timeouts
-
-- Connection: 10 seconds
-- Read: 30 seconds
-- Total: 60 seconds
-
-Override with: `tool fetch ID --timeout 120`
+💡 **Handle rate limits gracefully** - API allows 1000 requests/hour
 
 ## Alternative Access Methods
 
@@ -1400,6 +1146,17 @@ Use the Model Context Protocol server for AI agent integration:
 Direct API access for custom integrations:
 - Documentation: https://api.example.com/docs
 - OpenAPI spec: https://api.example.com/openapi.json
+
+## Quick Reference
+
+| Task | Command |
+|------|--------|
+| List all | `tool list --json` |
+| Get one | `tool fetch RESOURCE_ID --json` |
+| Create | `tool create --name "Name" --json` |
+| Update | `tool update RESOURCE_ID --status active --json` |
+| Filter by date | `tool list --after 2026-01-01 --json` |
+| Help for command | `tool COMMAND --ai-help` |
 ```
 
 ### Reference Implementation
@@ -1411,12 +1168,11 @@ See OuraCLI's implementation:
 
 Key features demonstrated:
 - YAML front matter with all required fields
-- "When to Use" section for skill triggering
-- Quick Reference for common operations
 - Prominent discoverability in main help
 - Comprehensive date format documentation with negative examples
 - Output format recommendations for AI parsing
 - Troubleshooting guide with actual error messages
+- Quick reference card for common operations
 - Explicit best practices for LLMs
 - Alternative access method links (web, MCP, API)
 
@@ -1429,20 +1185,16 @@ Key features demonstrated:
 - [ ] Output markdown with YAML front matter to stdout
 - [ ] Exit with code 0 after output
 - [ ] Include required front matter fields (§3.4.1.1):
-  - [ ] `name` — Tool name for skill creation
-  - [ ] `description` — What it does and when to use it
-  - [ ] `spec-url` — Link to dashdash repo
-  - [ ] `spec-version` — Specification version
-  - [ ] `subcommand-help` — Command-level help support
-  - [ ] `access-level` — Access control level
-  - [ ] `web-url` — Web alternative URL or `none`
-  - [ ] `mcp-url` — MCP server URL or `none`
-  - [ ] `api-url` — API docs URL or `none`
+  - [ ] `abt` - Link to dashdash repo
+  - [ ] `sub` - Command-level help support
+  - [ ] `ver` - Specification version link
+  - [ ] `acl` - Access control level
+  - [ ] `web` - Web alternative URL or `none`
+  - [ ] `mcp` - MCP server URL or `none`
+  - [ ] `api` - API docs URL or `none`
 - [ ] Include all required sections (§3.4.3):
-  - [ ] When to Use
   - [ ] Overview
   - [ ] Setup/Prerequisites
-  - [ ] Quick Reference
   - [ ] Command Reference
   - [ ] Input Specification
   - [ ] Output Formats
@@ -1454,21 +1206,15 @@ Key features demonstrated:
 
 ### Recommended
 
-- [ ] Include recommended front matter fields (§3.4.1.2):
-  - [ ] `argument-hint` — Autocomplete hint
-  - [ ] `install` — Installation instructions
-  - [ ] `requires` — Runtime requirements
-  - [ ] `invocation` — AI invocation control
-  - [ ] `homepage` — Documentation URL
-  - [ ] `repository` — Source code URL
 - [ ] Document all date/time formats if applicable (§3.4.5)
 - [ ] Provide output format recommendations (§3.4.6)
 - [ ] Include error examples with solutions (§3.4.7)
 - [ ] Add troubleshooting section
 - [ ] Include best practices for AI agents
 - [ ] Use visual markers (✅, ❌, ⚠️, 💡)
+- [ ] Add quick reference table
 - [ ] Document alternative access methods
-- [ ] Include command-level `--ai-help` if `subcommand-help: true` (§3.4.2)
+- [ ] Include command-level `--ai-help` if `sub: true` (§3.4.2)
 - [ ] Provide input schema specifications (§3.4.8)
 - [ ] Provide output schema specifications (§3.4.9)
 - [ ] Document operational semantics (§3.4.11):
@@ -1490,29 +1236,3 @@ Key features demonstrated:
 - [ ] Review for information disclosure
 - [ ] Test that flag exits without side effects
 - [ ] Verify markdown renders correctly
-- [ ] Confirm a valid SKILL.md can be generated from output
-
-## Appendix C: Front Matter Field Migration
-
-This appendix documents the field name changes from v1.x to v2.x:
-
-- `abt` → `spec-url`
-- `ver` → `spec-version`
-- `sub` → `subcommand-help`
-- `acl` → `access-level`
-- `web` → `web-url`
-- `mcp` → `mcp-url`
-- `api` → `api-url`
-
-New fields in v2.x:
-- `name` (REQUIRED)
-- `description` (REQUIRED)
-- `argument-hint` (RECOMMENDED)
-- `install` (RECOMMENDED)
-- `requires` (RECOMMENDED)
-- `invocation` (RECOMMENDED)
-- `homepage` (RECOMMENDED)
-- `repository` (RECOMMENDED)
-- `content-version` (OPTIONAL)
-- `last-updated` (OPTIONAL)
-- `emoji` (OPTIONAL)
